@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Toma de Decisiones</title>
+  <link rel="stylesheet" href="css/styles.css" />
+  <link rel="icon" href="/assets/answer.png" type="image/png">
+</head>
+<body>
+  <div class="contenedor container-glass">
+    <h1>Ingresa los nombres de los estados</h1>
+    <form id="form-estados">
+      <div id="campos-estados"></div>
+      <button type="submit">Siguiente</button>
+    </form>
+  </div>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const cantidad = parseInt(localStorage.getItem("cant_estados"));
+      const contenedor = document.getElementById("campos-estados");
+
+      for (let i = 0; i < cantidad; i++) {
+        const input = document.createElement("input");
+        input.type = "text";
+        input.name = `estado-${i}`;
+        input.placeholder = `Estado ${i + 1}`;
+        input.required = true;
+        contenedor.appendChild(input);
+      }
+
+      document.getElementById("form-estados").addEventListener("submit", (e) => {
+        e.preventDefault();
+        const nombres = [];
+
+        for (let i = 0; i < cantidad; i++) {
+          const valor = document.querySelector(`[name='estado-${i}']`).value;
+          nombres.push(valor.trim());
+        }
+
+        localStorage.setItem("estados", JSON.stringify(nombres));
+        window.location.href = "tabla.html";
+      });
+    });
+  </script>
+</body>
+</html>

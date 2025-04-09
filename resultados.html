@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Toma de Decisiones</title>
+  <link rel="stylesheet" href="css/styles.css" />
+  <link rel="icon" href="/assets/answer.png" type="image/png">
+</head>
+<body>
+  <div class="container container-glass">
+    <h1>Resultados de la Toma de Decisiones</h1>
+
+    <section id="resultados-incertidumbre">
+      <h3>Criterios bajo Incertidumbre</h3>
+      <table id="tabla-incertidumbre">
+        <tr><th>Criterio</th><th>Mejor Acción</th><th>Valor</th></tr>
+      </table>
+    </section>
+
+    <section id="resultados-riesgo">
+      <h3>Criterios bajo Riesgo</h3>
+      <table id="tabla-riesgo">
+        <tr><th>Criterio</th><th>Mejor Acción</th><th>Valor</th></tr>
+      </table>
+    </section>
+
+    <button onclick="volverAlInicio()">Volver al inicio</button>
+  </div>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const acciones = JSON.parse(localStorage.getItem("acciones"));
+      const estados = JSON.parse(localStorage.getItem("estados"));
+      const matriz = JSON.parse(localStorage.getItem("matriz"));
+      const probabilidades = JSON.parse(localStorage.getItem("probabilidades"));
+      const w = parseFloat(localStorage.getItem("hurwicz_w"));
+
+      const incertidumbreTabla = document.getElementById("tabla-incertidumbre");
+      const riesgoTabla = document.getElementById("tabla-riesgo");
+
+    
+
+      // --------------------------------- Criterios bajo Incertidumbre -------------------------------------------------
+
+      // OPTIMISTA
+      // Busco el máximo de cada fila
+      const maximos = matriz.map(fila => Math.max(...fila));
+      // De esos máximos se elije el mayos
+      const maxVal = Math.max(...maximos);
+      //Busco el índice de la acción que contiene ese valor máximo
+      const idxOpt = maximos.indexOf(maxVal);
+      //Agrego una fila a la tabla con el valor para el criterio optimista
+      incertidumbreTabla.innerHTML += `<tr><td>Optimista (Maximax)</td><td>${acciones[idxOpt]}</td><td>${maxVal}</td></tr>`;
+
+
+      //PESIMISTA
+      const minimos = matriz.map(fila => Math.min(...fila)); //Para cada accion (fila) busco el minimo
+      const minVal = Math.max(...minimos); //De esos minimos elijo el maximo 
+      const idxPes = minimos.indexOf(minVal); //Busco el indice
+      incertidumbreTabla.innerHTML += `<tr><td>Pesimista (Maximin)</td><td>${acciones[idxPes]}</td><td>${minVal}</td></tr>`; //Agrego el valor a la tabla
+
+
+      //HURWICZ
+      const hurwicz = matriz.map(fila => { //Por cada fila (accion)
+        const max = Math.max(...fila); //Me guardo el maximo    
+        const min = Math.min(...fila); // Y me guardo el minimo
+        return w * max + (1 - w) * min; //Y calculo Hj = w.MAX + (1-w).MIN
+      });
+      const maxHur = Math.max(...hurwicz); //Ahora busco el mayor valor de Hurwicz entre las acciones
+      const idxHur = hurwicz.indexOf(maxHur); //Obtengo el indice
+      incertidumbreTabla.innerHTML += `<tr><td>Hurwicz (W=${w})</td><td>${acciones[idxHur]}</td><td>${maxHur.toFixed(2)}</td></tr>`; //Agrego el valor a la tabla
+
+
+
+      //SAVAGE
+      const transpuesta = estados.map((_, j) => matriz.map(fila => fila[j])); //Intercambia filas por columnas (el cálculo de "arrepentimiento" se hace por estado, no por acción)
+      const regret = transpuesta.map(col => { //Por cada columna (estado)
+        const maxCol = Math.max(...col); //Calculo el valor máximo
+        return col.map(val => maxCol - val); // para cada acción, se calcula la pérdida de arrepentimiento (arrepentimiento= maximo de la columna − valor actual)
+      });
+      const regretMatriz = regret[0].map((_, i) => regret.map(col => col[i])); //Vuelvo a transponer la matriz de arrepentimientos para que quede con la misma estructura original.
+      const maxRegrets = regretMatriz.map(fila => Math.max(...fila)); //Para cada acción (fila), se busca su mayor arrepentimiento entre todos los estados.
+      const minRegret = Math.min(...maxRegrets); //Busco la acción que tenga el menor de los máximos arrepentimientos.
+      const idxSav = maxRegrets.indexOf(minRegret); //Obtengo el indice
+      incertidumbreTabla.innerHTML += `<tr><td>Savage (Minimax de Pérdidas)</td><td>${acciones[idxSav]}</td><td>${minRegret}</td></tr>`; //Muestro el resultado en la tabla de resultados
+
+      // -------------------------------- Criterios bajo Riesgo --------------------------------------
+      //ESPERANZA MATEMATICA
+      const esperanza = matriz.map(fila => //Para cada acción (fila) calculo la Esperanza Matematica:
+        fila.reduce((acc, val, j) => acc + val * probabilidades[j], 0) // Multiplico cada valor de una fila por la probabilidad de que el estado a la que pertenece, ocurra8
+        // Si una fila es [10, 5, 20] y las probabilidades son [0.2, 0.5, 0.3], la esperanza sería: 
+        // 710*0.2 + 5*0.5 + 20*0.3 = 2 + 2.5 + 6 = 10.5
+      );
+      const maxEsp = Math.max(...esperanza); //Selecciono la accion con mayor esperanza88
+      const idxEsp = esperanza.indexOf(maxEsp); //Obtengo el indice
+      riesgoTabla.innerHTML += `<tr><td>Esperanza Matemática</td><td>${acciones[idxEsp]}</td><td>${maxEsp.toFixed(2)}</td></tr>`; //Agrego el valor a la tabla
+
+
+      //BEIP
+      //Para cada estado de la naturaleza (j), tomo el mejor valor posible entre todas las acciones.
+      const mejorEstado = estados.map((_, j) => Math.max(...matriz.map(f => f[j])));
+      const beip = mejorEstado.reduce((acc, val, j) => acc + val * probabilidades[j], 0); //Multiplico cada máximo por su posibilidad de ocurrencia
+      riesgoTabla.innerHTML += `<tr><td>BEIP</td><td>—</td><td>${beip.toFixed(2)}</td></tr>`; //Lo agrego a la tabla
+
+
+      //VEIP
+      const veip = beip - maxEsp; //Calculo el VEIP= BEIP - maxESPERANZAMATEMATICA
+      riesgoTabla.innerHTML += `<tr><td>VEIP</td><td>—</td><td>${veip.toFixed(2)}</td></tr>`; //Lo agrego a la tabla
+      });
+
+
+      //Codigo para volver al inicio al tocar el boton
+      function volverAlInicio() {
+        localStorage.clear();
+        window.location.href = "index.html";
+      }
+  </script>
+</body>
+</html>

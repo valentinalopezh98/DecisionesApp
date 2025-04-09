@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Toma de Decisiones</title>
+  <link rel="stylesheet" href="css/styles.css" />
+  <link rel="icon" href="/assets/answer.png" type="image/png">
+</head>
+<body>
+  <div class="contenedor container-glass contenedor-max">
+    <h1>Completa la Tabla de Decisión</h1>
+    <form id="form-tabla">
+      <div class="tabla-scroll">
+        <table id="tabla-decision">
+          <!-- Tabla generada dinámicamente -->
+        </table>
+        <div class="hurwicz-container">
+          <label for="hurwicz-w">Valor de W para el criterio de Hurwicz (entre 0 y 1):</label>
+          <input type="number" id="hurwicz-w" name="hurwicz-w" min="0" max="1" step="0.01" value="0.5" required />
+          <p id="w-error" class="error-message" style="display: none;">⚠️ El valor debe estar entre 0 y 1.</p>
+        </div>      
+      </div>
+      <button id="continuar-btn" type="submit">Ver Resultados</button>
+    </form>
+  </div>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const acciones = JSON.parse(localStorage.getItem("acciones"));
+      const estados = JSON.parse(localStorage.getItem("estados"));
+      const tabla = document.getElementById("tabla-decision");
+  
+      // Generar fila de probabilidades
+      let filaProb = "<tr><th>Probabilidades</th>";
+      estados.forEach((_, j) => {
+        filaProb += `<td><input type="number" name="prob-${j}" step="0.01" min="0" max="1" required></td>`;
+      });
+      filaProb += "</tr>";
+  
+      // Generar fila de nombres de estados
+      let filaEstados = "<tr><th>Decisión \\ Estado</th>";
+      estados.forEach(estado => {
+        filaEstados += `<th>${estado}</th>`;
+      });
+      filaEstados += "</tr>";
+  
+      // Generar filas de la matriz
+      let cuerpo = "";
+      acciones.forEach((accion, i) => {
+        cuerpo += `<tr><th>${accion}</th>`;
+        estados.forEach((_, j) => {
+          cuerpo += `<td><input type="number" name="cell-${i}-${j}" required></td>`;
+        });
+        cuerpo += "</tr>";
+      });
+  
+      tabla.innerHTML = filaProb + filaEstados + cuerpo;
+  
+      // Botón "Continuar"
+      document.getElementById("continuar-btn").addEventListener("click", () => {
+        const wInput = document.getElementById("hurwicz-w");
+        const errorMsg = document.getElementById("w-error");
+        const w = parseFloat(wInput.value);
+  
+        if (isNaN(w) || w < 0 || w > 1) {
+          errorMsg.style.display = "block";
+          return;
+        } else {
+          errorMsg.style.display = "none";
+          localStorage.setItem("hurwicz_w", w);
+        }
+  
+        // Leer probabilidades
+        const probabilidades = [];
+        for (let j = 0; j < estados.length; j++) {
+          const p = parseFloat(document.querySelector(`[name='prob-${j}']`).value);
+          probabilidades.push(p);
+        }
+  
+        // Leer matriz
+        const matriz = [];
+        for (let i = 0; i < acciones.length; i++) {
+          let fila = [];
+          for (let j = 0; j < estados.length; j++) {
+            const valor = parseFloat(document.querySelector(`[name='cell-${i}-${j}']`).value);
+            fila.push(valor);
+          }
+          matriz.push(fila);
+        }
+  
+        // Guardar en localStorage
+        localStorage.setItem("probabilidades", JSON.stringify(probabilidades));
+        localStorage.setItem("matriz", JSON.stringify(matriz));
+  
+        // Redireccionar
+        window.location.href = "resultados.html";
+      });
+    });
+  </script>
+  
+</body>
+</html>
