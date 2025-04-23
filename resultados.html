@@ -43,6 +43,12 @@
 
       // --------------------------------- Criterios bajo Incertidumbre -------------------------------------------------
 
+      //Funcion para ver si dejo los decimales o no
+
+      function formatearNumero(num) {
+        return Number.isInteger(num) ? num : num.toFixed(3);
+      }
+
       // OPTIMISTA
       // Busco el máximo de cada fila
       const maximos = matriz.map(fila => Math.max(...fila));
@@ -69,7 +75,7 @@
       });
       const maxHur = Math.max(...hurwicz); //Ahora busco el mayor valor de Hurwicz entre las acciones
       const idxHur = hurwicz.indexOf(maxHur); //Obtengo el indice
-      incertidumbreTabla.innerHTML += `<tr><td>Hurwicz (W=${w})</td><td>${acciones[idxHur]}</td><td>${maxHur.toFixed(2)}</td></tr>`; //Agrego el valor a la tabla
+      incertidumbreTabla.innerHTML += `<tr><td>Hurwicz (W=${w})</td><td>${acciones[idxHur]}</td><td>${formatearNumero(maxHur)}</td></tr>`; //Agrego el valor a la tabla
 
 
 
@@ -94,19 +100,19 @@
       );
       const maxEsp = Math.max(...esperanza); //Selecciono la accion con mayor esperanza88
       const idxEsp = esperanza.indexOf(maxEsp); //Obtengo el indice
-      riesgoTabla.innerHTML += `<tr><td>Esperanza Matemática</td><td>${acciones[idxEsp]}</td><td>${maxEsp.toFixed(3)}</td></tr>`; //Agrego el valor a la tabla
+      riesgoTabla.innerHTML += `<tr><td>Esperanza Matemática</td><td>${acciones[idxEsp]}</td><td>${formatearNumero(maxEsp)}</td></tr>`; //Agrego el valor a la tabla
 
 
       //BEIP
       //Para cada estado de la naturaleza (j), tomo el mejor valor posible entre todas las acciones.
       const mejorEstado = estados.map((_, j) => Math.max(...matriz.map(f => f[j])));
       const beip = mejorEstado.reduce((acc, val, j) => acc + val * probabilidades[j], 0); //Multiplico cada máximo por su posibilidad de ocurrencia
-      riesgoTabla.innerHTML += `<tr><td>BEIP</td><td>—</td><td>${beip.toFixed(3)}</td></tr>`; //Lo agrego a la tabla
+      riesgoTabla.innerHTML += `<tr><td>BEIP</td><td>—</td><td>${formatearNumero(beip)}</td></tr>`; //Lo agrego a la tabla
 
 
       //VEIP
       const veip = beip - maxEsp; //Calculo el VEIP= BEIP - maxESPERANZAMATEMATICA
-      riesgoTabla.innerHTML += `<tr><td>VEIP</td><td>—</td><td>${veip.toFixed(3)}</td></tr>`; //Lo agrego a la tabla
+      riesgoTabla.innerHTML += `<tr><td>VEIP</td><td>—</td><td>${formatearNumero(veip)}</td></tr>`; //Lo agrego a la tabla
       });
 
 
