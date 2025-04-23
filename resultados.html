@@ -94,19 +94,19 @@
       );
       const maxEsp = Math.max(...esperanza); //Selecciono la accion con mayor esperanza88
       const idxEsp = esperanza.indexOf(maxEsp); //Obtengo el indice
-      riesgoTabla.innerHTML += `<tr><td>Esperanza Matemática</td><td>${acciones[idxEsp]}</td><td>${maxEsp.toFixed(3)}</td></tr>`; //Agrego el valor a la tabla
+      riesgoTabla.innerHTML += `<tr><td>Esperanza Matemática</td><td>${acciones[idxEsp]}</td><td>${maxEsp.toFixed(2)}</td></tr>`; //Agrego el valor a la tabla
 
 
       //BEIP
       //Para cada estado de la naturaleza (j), tomo el mejor valor posible entre todas las acciones.
       const mejorEstado = estados.map((_, j) => Math.max(...matriz.map(f => f[j])));
       const beip = mejorEstado.reduce((acc, val, j) => acc + val * probabilidades[j], 0); //Multiplico cada máximo por su posibilidad de ocurrencia
-      riesgoTabla.innerHTML += `<tr><td>BEIP</td><td>—</td><td>${beip.toFixed(3)}</td></tr>`; //Lo agrego a la tabla
+      riesgoTabla.innerHTML += `<tr><td>BEIP</td><td>—</td><td>${beip.toFixed(2)}</td></tr>`; //Lo agrego a la tabla
 
 
       //VEIP
       const veip = beip - maxEsp; //Calculo el VEIP= BEIP - maxESPERANZAMATEMATICA
-      riesgoTabla.innerHTML += `<tr><td>VEIP</td><td>—</td><td>${veip.toFixed(3)}</td></tr>`; //Lo agrego a la tabla
+      riesgoTabla.innerHTML += `<tr><td>VEIP</td><td>—</td><td>${veip.toFixed(2)}</td></tr>`; //Lo agrego a la tabla
       });
 
 
